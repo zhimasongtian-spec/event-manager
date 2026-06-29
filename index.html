@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>イベント管理</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Sans','Yu Gothic UI',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+
+/* ── NAV ── */
+.topnav{position:fixed;top:0;left:0;right:0;z-index:50;background:#1a1a6e;color:#fff}
+.topnav-brand{display:flex;align-items:center;gap:10px;padding:0 20px;height:52px;border-bottom:1px solid rgba(255,255,255,.12)}
+.topnav-brand .logo{font-size:19px;font-weight:700;letter-spacing:.3px}
+.topnav-brand .logo span{color:#93c5fd}
+.topnav-tabs{display:flex;overflow-x:auto;scrollbar-width:none}
+.topnav-tabs::-webkit-scrollbar{display:none}
+.ntab{display:flex;align-items:center;gap:6px;padding:10px 18px;font-size:13px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;color:rgba(255,255,255,.65);transition:.2s}
+.ntab:hover{color:#fff;background:rgba(255,255,255,.07)}
+.ntab.active{color:#fff;border-bottom-color:#60a5fa;background:rgba(255,255,255,.08)}
+.ntab i{font-size:16px}
+
+/* ── LAYOUT ── */
+.page{padding-top:94px;padding-bottom:48px}
+.container{max-width:920px;margin:0 auto;padding:0 16px}
+.screen{display:none}
+.screen.active{display:block}
+.section-title{font-size:17px;font-weight:700;color:#1a1a6e;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.section-title i{font-size:20px;color:#3b82f6}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:14px;padding:20px;margin-bottom:16px;border:1px solid #e4e7ef}
+.card-head{font-size:14px;font-weight:700;color:#1a1a6e;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #eef2ff;display:flex;align-items:center;gap:8px}
+.card-head i{color:#6366f1}
+
+/* ── EVENT SHOWCASE (Home) ── */
+.ev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:8px}
+.ev-showcase{background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e4e7ef;display:flex;flex-direction:column;cursor:pointer;transition:.2s}
+.ev-showcase:hover{box-shadow:0 6px 20px rgba(0,0,0,.1);transform:translateY(-2px)}
+.ev-showcase-hero{padding:18px 18px 14px;color:#fff;position:relative}
+.ev-showcase-club{font-size:11px;font-weight:700;opacity:.85;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.ev-showcase-title{font-size:17px;font-weight:800;line-height:1.35}
+.ev-showcase-body{padding:14px 18px;flex:1;display:flex;flex-direction:column;gap:8px}
+.ev-meta-row{display:flex;flex-wrap:wrap;gap:10px}
+.ev-meta-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280}
+.ev-meta-item i{font-size:14px;color:#93c5fd}
+.ev-showcase-footer{padding:12px 18px;border-top:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cap-bar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.cap-fill{height:100%;border-radius:3px;background:#3b82f6;transition:width .3s}
+.cap-fill.hi{background:#f59e0b}.cap-fill.fu{background:#dc2626}
+.cap-label{font-size:11px;color:#9ca3af;margin-top:3px}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;gap:3px}
+.b-open{background:#d1fae5;color:#065f46}
+.b-full{background:#fef3c7;color:#92400e}
+.b-club{background:#eef2ff;color:#3730a3}
+.b-conflict{background:#fee2e2;color:#991b1b}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{padding:9px 13px;border:1.5px solid #d1d5db;border-radius:9px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a2e;transition:.15s}
+.filter-bar input{flex:1;min-width:140px}
+.filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:#3b82f6}
+
+/* ── CALENDAR ── */
+.cal-wrap{background:#fff;border-radius:14px;border:1px solid #e4e7ef;overflow:hidden}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#1a1a6e;color:#fff}
+.cal-month{font-size:17px;font-weight:800}
+.cal-nav{display:flex;gap:4px}
+.cal-nav-btn{width:34px;height:34px;border-radius:8px;border:none;background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.cal-nav-btn:hover{background:rgba(255,255,255,.22)}
+.cal-legend{display:flex;gap:14px;align-items:center;padding:10px 20px;background:#f8fafc;border-bottom:1px solid #e4e7ef;flex-wrap:wrap}
+.cal-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#6b7280}
+.cal-legend-dot{width:10px;height:10px;border-radius:50%}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #e4e7ef}
+.cal-weekday{text-align:center;padding:10px 4px;font-size:12px;font-weight:700;color:#6b7280}
+.cal-weekday.sun{color:#dc2626}.cal-weekday.sat{color:#3b82f6}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-cell{min-height:90px;border-right:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;padding:6px 4px 4px;position:relative;transition:.12s;cursor:pointer}
+.cal-cell:nth-child(7n){border-right:none}
+.cal-cell:hover{background:#f8f9ff}
+.cal-cell.other-month{background:#fafafa}
+.cal-cell.other-month .cal-day-num{color:#c9cdd4}
+.cal-cell.today{background:#eff6ff}
+.cal-cell.today .cal-day-num{background:#1a1a6e;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+.cal-cell.has-conflict{background:#fff7f7}
+.cal-day-num{font-size:12px;font-weight:700;color:#374151;margin-bottom:3px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+.cal-cell.sun .cal-day-num{color:#dc2626}
+.cal-cell.sat .cal-day-num{color:#3b82f6}
+.cal-cell.today .cal-day-num{color:#fff !important}
+/* club filter */
+.cal-club-filters{display:flex;gap:8px;flex-wrap:wrap;padding:10px 20px;background:#f8fafc;border-bottom:1px solid #e4e7ef;align-items:center}
+.ccf-btn{display:flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;border:2px solid transparent;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;color:#fff;opacity:.45}
+.ccf-btn.on{opacity:1}
+.ccf-btn.all{background:#374151;border-color:#374151}
+.ccf-btn.all.on{opacity:1}
+.ev-pill{display:block;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700;color:#fff;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:.12s;line-height:1.5}
+.ev-pill:hover{opacity:.82;transform:scale(1.02)}
+.ev-more{font-size:10px;color:#9ca3af;padding:1px 4px}
+.conflict-dot{position:absolute;top:4px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#dc2626}
+
+/* ── FORMS ── */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;font-weight:700;color:#4b5563;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:9px;font-size:14px;font-family:inherit;transition:.15s;background:#fafafa;color:#1a1a2e}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1);background:#fff}
+.fg textarea{height:90px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.req::after{content:'*';color:#dc2626;margin-left:2px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:700;transition:.15s;font-family:inherit;white-space:nowrap}
+.btn i{font-size:15px}
+.btn-primary{background:#1a1a6e;color:#fff}.btn-primary:hover{background:#2d2d8e}
+.btn-blue{background:#3b82f6;color:#fff}.btn-blue:hover{background:#2563eb}
+.btn-red{background:#dc2626;color:#fff}.btn-red:hover{background:#b91c1c}
+.btn-green{background:#059669;color:#fff}.btn-green:hover{background:#047857}
+.btn-outline{background:#fff;color:#1a1a6e;border:1.5px solid #1a1a6e}.btn-outline:hover{background:#eef2ff}
+.btn-ghost{background:transparent;color:#6b7280;border:1.5px solid #e5e7eb}.btn-ghost:hover{background:#f9fafb;color:#374151}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-xs{padding:4px 9px;font-size:11px}
+.btn-block{width:100%;justify-content:center}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── ALERTS ── */
+.alert{padding:11px 15px;border-radius:10px;margin-bottom:13px;font-size:13px;display:flex;gap:8px;align-items:flex-start}
+.alert i{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert-warn{background:#fef9c3;border:1px solid #fde047;color:#713f12}.alert-warn i{color:#ca8a04}
+.alert-danger{background:#fee2e2;border:1px solid #fca5a5;color:#7f1d1d}.alert-danger i{color:#dc2626}
+.alert-success{background:#d1fae5;border:1px solid #6ee7b7;color:#065f46}.alert-success i{color:#059669}
+.alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a}.alert-info i{color:#3b82f6}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:18px;padding:24px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:800;color:#1a1a6e;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.modal-title i{font-size:20px;color:#6366f1}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid #f3f4f6}
+
+/* ── DETAIL PANEL ── */
+.detail-hero{border-radius:10px 10px 0 0;padding:20px 22px 16px;color:#fff}
+.detail-hero h2{font-size:20px;font-weight:800;margin-bottom:8px}
+.dh-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:rgba(255,255,255,.85)}
+.dh-meta span{display:flex;align-items:center;gap:5px}
+.detail-body{padding:18px 22px}
+.dl{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+
+/* ── ADMIN LIST ── */
+.adm-list{display:flex;flex-direction:column;gap:10px}
+.adm-item{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid #e4e7ef;border-left:5px solid #1a1a6e;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.15s}
+.adm-item:hover{box-shadow:0 3px 12px rgba(0,0,0,.07)}
+.adm-item-info{flex:1;min-width:0}
+.adm-title{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm-meta{font-size:12px;color:#6b7280;margin-top:2px}
+.adm-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* ── CLUBS ── */
+.club-item{display:flex;align-items:center;gap:12px;background:#fff;border-radius:11px;padding:12px 16px;border:1px solid #e4e7ef;margin-bottom:8px}
+.club-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.club-name{font-weight:700;flex:1;font-size:14px}
+.color-opts{display:flex;gap:8px;flex-wrap:wrap;padding:4px 0}
+.co{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.15s}
+.co.sel{border-color:#111;transform:scale(1.2)}
+.co:hover{transform:scale(1.15)}
+
+/* ── REG LIST ── */
+.reg-item{display:flex;align-items:flex-start;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f3f4f6;gap:8px}
+.reg-item:last-child{border:none}
+.reg-name{font-weight:700;font-size:13px}
+.reg-info{font-size:12px;color:#9ca3af;margin-top:1px}
+.reg-num{width:22px;height:22px;border-radius:50%;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.reg-cancelled .reg-name{text-decoration:line-through;color:#c4c9d4}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border-radius:12px;padding:14px;text-align:center;border:1px solid #e4e7ef}
+.stat-n{font-size:28px;font-weight:800;color:#1a1a6e}
+.stat-l{font-size:11px;color:#6b7280;margin-top:2px}
+
+/* ── ITABS ── */
+.itabs{display:flex;border-bottom:2px solid #e5e7eb;margin-bottom:18px;gap:2px}
+.itab{padding:8px 15px;font-size:13px;cursor:pointer;color:#6b7280;border-bottom:2px solid transparent;margin-bottom:-2px;transition:.15s;border-radius:6px 6px 0 0;font-weight:600}
+.itab.active{color:#1a1a6e;border-bottom-color:#1a1a6e;background:#eef2ff}
+.itab:hover{color:#374151;background:#f9fafb}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:48px 20px;color:#9ca3af}
+.empty i{font-size:52px;margin-bottom:12px;display:block;color:#d1d5db}
+.empty p{font-size:14px}
+.sep{height:1px;background:#f0f2f5;margin:16px 0}
+
+@media(max-width:600px){
+  .row2{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .ev-grid{grid-template-columns:1fr}
+  .filter-bar{flex-direction:column}
+  .cal-cell{min-height:56px}
+  /* nav */
+  .ntab{padding:10px 11px;font-size:12px;gap:4px}
+  .ntab i{font-size:15px}
+  /* buttons: minimum 44px tap target */
+  .btn{min-height:44px}
+  .btn-sm{min-height:38px;padding:8px 14px}
+  .btn-xs{min-height:32px}
+  /* calendar: pills → dots on narrow screens */
+  .ev-pill{width:9px;height:9px;border-radius:50%;padding:0;font-size:0;display:inline-block;vertical-align:middle;margin:0 1px 2px 0}
+  .ev-more{display:none}
+  /* club filter buttons */
+  .ccf-btn{padding:6px 12px;min-height:36px;font-size:12px}
+  /* modal */
+  .modal{padding:18px}
+  /* detail hero */
+  .detail-hero h2{font-size:17px}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-brand">
+    <span class="logo"><i class="ti ti-calendar-event" aria-hidden="true"></i> イベント<span>マネージャー</span></span>
+  </div>
+  <div class="topnav-tabs">
+    <div class="ntab active" onclick="nav('home')" id="ntab-home"><i class="ti ti-layout-cards" aria-hidden="true"></i>ホーム</div>
+    <div class="ntab" onclick="nav('calendar')" id="ntab-calendar"><i class="ti ti-calendar-month" aria-hidden="true"></i>カレンダー</div>
+    <div class="ntab" onclick="nav('manage')" id="ntab-manage"><i class="ti ti-settings" aria-hidden="true"></i>イベント管理</div>
+    <div class="ntab" onclick="nav('clubs')" id="ntab-clubs"><i class="ti ti-users" aria-hidden="true"></i>部の管理</div>
+  </div>
+</nav>
+
+<div class="page">
+<div class="container">
+
+<!-- ═══════════ HOME ═══════════ -->
+<div class="screen active" id="screen-home">
+  <div class="section-title"><i class="ti ti-layout-cards" aria-hidden="true"></i>開催予定のイベント</div>
+  <div class="filter-bar">
+    <input type="text" id="home-kw" placeholder="キーワードで探す…" oninput="renderHome()">
+    <select id="home-club" onchange="renderHome()">
+      <option value="">すべての部</option>
+    </select>
+  </div>
+  <div class="ev-grid" id="home-grid"></div>
+</div>
+
+<!-- ═══════════ CALENDAR ═══════════ -->
+<div class="screen" id="screen-calendar">
+  <div id="cal-conflict-alert"></div>
+  <div class="cal-wrap">
+    <div class="cal-header">
+      <div class="cal-month" id="cal-month-label"></div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calMove(-1)" aria-label="前の月"><i class="ti ti-chevron-left"></i></button>
+        <button class="cal-nav-btn" onclick="calToday()" style="font-size:11px;font-weight:700;width:auto;padding:0 10px">今月</button>
+        <button class="cal-nav-btn" onclick="calMove(1)" aria-label="次の月"><i class="ti ti-chevron-right"></i></button>
+      </div>
+    </div>
+    <div class="cal-legend">
+      <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#1a1a6e"></span>イベントをクリック → 詳細・参加登録</span>
+      <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#e5e7eb;border:1px solid #d1d5db"></span>日付をクリック → その日のイベント一覧</span>
+      <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#dc2626"></span>日程重複あり</span>
+    </div>
+    <div class="cal-club-filters" id="cal-club-filters"></div>
+    <div class="cal-weekdays">
+      <div class="cal-weekday sun">日</div>
+      <div class="cal-weekday">月</div><div class="cal-weekday">火</div>
+      <div class="cal-weekday">水</div><div class="cal-weekday">木</div>
+      <div class="cal-weekday">金</div>
+      <div class="cal-weekday sat">土</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+</div>
+
+<!-- ═══════════ MANAGE ═══════════ -->
+<div class="screen" id="screen-manage">
+  <div class="section-title"><i class="ti ti-settings" aria-hidden="true"></i>イベント管理</div>
+  <div class="stats" id="adm-stats"></div>
+  <div id="adm-conflict-area"></div>
+  <div class="itabs">
+    <div class="itab active" onclick="admTab('list')" id="atab-list"><i class="ti ti-list" style="font-size:14px"></i> 一覧</div>
+    <div class="itab" onclick="admTab('add')" id="atab-add"><i class="ti ti-plus" style="font-size:14px"></i> 新規登録</div>
+  </div>
+  <div id="adm-list-panel">
+    <div class="filter-bar">
+      <input type="text" id="adm-kw" placeholder="検索…" oninput="renderAdmList()">
+      <select id="adm-club-f" onchange="renderAdmList()">
+        <option value="">すべての部</option>
+      </select>
+    </div>
+    <div class="adm-list" id="adm-list"></div>
+  </div>
+  <div id="adm-add-panel" style="display:none">
+    <div class="card">
+      <div class="card-head"><i class="ti ti-forms" aria-hidden="true"></i>イベント情報入力</div>
+      <div id="add-conflict-alert"></div>
+      <div class="fg"><label class="req">部を選択</label><select id="ev-club" onchange="checkConflict()"><option value="">-- 部を選択 --</option></select></div>
+      <div class="fg"><label class="req">イベント名</label><input type="text" id="ev-title" placeholder="例：秋の料理教室"></div>
+      <div class="row2">
+        <div class="fg"><label class="req">開催日</label><input type="date" id="ev-date" onchange="checkConflict()"></div>
+        <div class="fg"><label>会場</label><input type="text" id="ev-venue" placeholder="例：市民ホール"></div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>開始時間</label><input type="time" id="ev-start" value="10:00"></div>
+        <div class="fg"><label>終了時間</label><input type="time" id="ev-end" value="12:00"></div>
+      </div>
+      <div class="fg"><label>定員</label><input type="number" id="ev-cap" min="1" placeholder="例：30"></div>
+      <div class="fg"><label>概要</label><textarea id="ev-desc" placeholder="参加者への案内文を記入してください"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="clearAddForm()"><i class="ti ti-refresh"></i>クリア</button>
+        <button class="btn btn-primary" onclick="saveEvent()"><i class="ti ti-device-floppy"></i>登録する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CLUBS ═══════════ -->
+<div class="screen" id="screen-clubs">
+  <div class="section-title"><i class="ti ti-users" aria-hidden="true"></i>部の管理</div>
+  <div class="card">
+    <div class="card-head"><i class="ti ti-user-plus" aria-hidden="true"></i>新しい部を登録</div>
+    <div class="fg"><label class="req">部の名前</label><input type="text" id="club-name" placeholder="例：陶芸部"></div>
+    <div class="fg"><label>カラー</label><div class="color-opts" id="color-opts"></div><input type="hidden" id="club-color" value="#1a1a6e"></div>
+    <div class="fg"><label>備考</label><input type="text" id="club-note" placeholder="（任意）"></div>
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn btn-primary" onclick="addClub()"><i class="ti ti-check"></i>登録する</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><i class="ti ti-list" aria-hidden="true"></i>登録済みの部</div>
+    <div id="club-list"></div>
+  </div>
+</div>
+
+</div><!-- /container -->
+</div><!-- /page -->
+
+<!-- ═══ DETAIL MODAL ═══ -->
+<div class="overlay" id="modal-detail">
+  <div class="modal" style="max-width:560px;padding:0;overflow:hidden">
+    <div id="modal-detail-content"></div>
+    <div style="padding:14px 22px;border-top:1px solid #f3f4f6;display:flex;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-detail')"><i class="ti ti-x"></i>閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ JOIN MODAL ═══ -->
+<div class="overlay" id="modal-join">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-user-check" aria-hidden="true"></i>参加登録</div>
+    <div id="join-ev-name" style="font-size:13px;color:#6b7280;margin:-10px 0 16px"></div>
+    <div id="join-alert"></div>
+    <div class="fg"><label class="req">お名前</label><input type="text" id="join-name" placeholder="例：山田 太郎"></div>
+    <div class="fg"><label>メールアドレス</label><input type="email" id="join-email" placeholder="例：taro@example.com"></div>
+    <div class="fg"><label>電話番号</label><input type="tel" id="join-phone" placeholder="例：090-1234-5678"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-join')"><i class="ti ti-x"></i>キャンセル</button>
+      <button class="btn btn-green" onclick="submitJoin()"><i class="ti ti-check"></i>登録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CANCEL MODAL ═══ -->
+<div class="overlay" id="modal-cancel">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title"><i class="ti ti-user-minus" aria-hidden="true"></i>参加キャンセル</div>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:14px">登録したお名前を入力してください。</p>
+    <div class="fg"><label class="req">お名前</label><input type="text" id="cancel-name" placeholder="例：山田 太郎"></div>
+    <div id="cancel-alert"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cancel')"><i class="ti ti-x"></i>戻る</button>
+      <button class="btn btn-red" onclick="submitCancel()"><i class="ti ti-trash"></i>キャンセルする</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EDIT MODAL ═══ -->
+<div class="overlay" id="modal-edit">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-edit" aria-hidden="true"></i>イベント編集</div>
+    <input type="hidden" id="edit-id">
+    <div class="fg"><label class="req">イベント名</label><input type="text" id="edit-title"></div>
+    <div class="row2">
+      <div class="fg"><label class="req">開催日</label><input type="date" id="edit-date"></div>
+      <div class="fg"><label>会場</label><input type="text" id="edit-venue"></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>開始</label><input type="time" id="edit-start"></div>
+      <div class="fg"><label>終了</label><input type="time" id="edit-end"></div>
+    </div>
+    <div class="fg"><label>定員</label><input type="number" id="edit-cap" min="1"></div>
+    <div class="fg"><label>概要</label><textarea id="edit-desc"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit')"><i class="ti ti-x"></i>キャンセル</button>
+      <button class="btn btn-primary" onclick="updateEvent()"><i class="ti ti-device-floppy"></i>保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DELETE MODAL ═══ -->
+<div class="overlay" id="modal-del">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title"><i class="ti ti-alert-triangle" aria-hidden="true"></i>イベント削除</div>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:8px">このイベントを削除しますか？参加者データも削除されます。</p>
+    <p style="font-size:14px;font-weight:700;margin-bottom:4px" id="del-ev-name"></p>
+    <input type="hidden" id="del-id">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-del')"><i class="ti ti-x"></i>キャンセル</button>
+      <button class="btn btn-red" onclick="deleteEvent()"><i class="ti ti-trash"></i>削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DAY DETAIL (Calendar day click) ═══ -->
+<div class="overlay" id="modal-day">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title"><i class="ti ti-calendar-event" aria-hidden="true"></i><span id="day-modal-title"></span></div>
+    <div id="day-modal-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-day')"><i class="ti ti-x"></i>閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════ DATA LAYER ═══════════════
+const COLORS=['#1a1a6e','#7c3aed','#dc2626','#d97706','#059669','#0891b2','#db2777','#374151','#0f766e','#9333ea'];
+
+const gd=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}};
+const sd=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const getClubs=()=>gd('clubs',[]);
+const getEvents=()=>gd('events',[]);
+const getRegs=()=>gd('regs',[]);
+const saveClubs=v=>sd('clubs',v);
+const saveEvents=v=>sd('events',v);
+const saveRegs=v=>sd('regs',v);
+
+// ═══════════════ SEED ═══════════════
+(function(){
+  if(getClubs().length)return;
+  const clubs=[
+    {id:uid(),name:'文化部',color:'#7c3aed',note:'',createdAt:new Date().toISOString()},
+    {id:uid(),name:'スポーツ部',color:'#059669',note:'',createdAt:new Date().toISOString()},
+    {id:uid(),name:'料理部',color:'#d97706',note:'',createdAt:new Date().toISOString()},
+  ];
+  saveClubs(clubs);
+  const fmt=d=>d.toISOString().split('T')[0];
+  const d0=new Date();
+  const mk=(n)=>{const d=new Date(d0);d.setDate(d0.getDate()+n);return fmt(d);};
+  const events=[
+    {id:uid(),clubId:clubs[0].id,title:'文化祭展示会',date:mk(10),startTime:'13:00',endTime:'17:00',venue:'市民ホール',capacity:50,desc:'絵画・工芸品の展示を行います。どなたでもご参加いただけます。',status:'open',createdAt:new Date().toISOString()},
+    {id:uid(),clubId:clubs[1].id,title:'スポーツ大会',date:mk(10),startTime:'10:00',endTime:'16:00',venue:'市民体育館',capacity:80,desc:'バドミントン・卓球・バレーボールを予定。動きやすい服装でお越しください。',status:'open',createdAt:new Date().toISOString()},
+    {id:uid(),clubId:clubs[2].id,title:'秋の料理教室',date:mk(18),startTime:'10:00',endTime:'13:00',venue:'調理実習室',capacity:20,desc:'旬の野菜を使った和食を学びます。エプロンをお持ちください。',status:'open',createdAt:new Date().toISOString()},
+    {id:uid(),clubId:clubs[0].id,title:'陶芸ワークショップ',date:mk(25),startTime:'14:00',endTime:'16:00',venue:'アトリエ棟',capacity:15,desc:'初心者向け陶芸体験。お子様もご参加いただけます。',status:'open',createdAt:new Date().toISOString()},
+  ];
+  saveEvents(events);
+  const regs=[
+    {id:uid(),eventId:events[0].id,name:'田中 花子',email:'hanako@example.com',phone:'090-1234-5678',registeredAt:new Date().toISOString(),cancelled:false},
+    {id:uid(),eventId:events[0].id,name:'鈴木 一郎',email:'ichiro@example.com',phone:'',registeredAt:new Date().toISOString(),cancelled:false},
+    {id:uid(),eventId:events[1].id,name:'佐藤 次郎',email:'jiro@example.com',phone:'080-9876-5432',registeredAt:new Date().toISOString(),cancelled:false},
+    {id:uid(),eventId:events[1].id,name:'山田 三郎',email:'',phone:'070-1111-2222',registeredAt:new Date().toISOString(),cancelled:false},
+    {id:uid(),eventId:events[2].id,name:'伊藤 四郎',email:'shiro@example.com',phone:'',registeredAt:new Date().toISOString(),cancelled:false},
+  ];
+  saveRegs(regs);
+})();
+
+// ═══════════════ HELPERS ═══════════════
+const fmtDate=d=>{const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});};
+const fmtDateShort=d=>{const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',weekday:'short'});};
+const countRegs=eid=>getRegs().filter(r=>r.eventId===eid&&!r.cancelled).length;
+const getClub=id=>getClubs().find(c=>c.id===id)||{name:'不明',color:'#888'};
+const capRatio=ev=>ev.capacity?countRegs(ev.id)/ev.capacity:-1;
+const capCls=r=>r>=1?'fu':r>=.8?'hi':'';
+
+function detectConflicts(){
+  const byDate={};
+  getEvents().forEach(e=>{
+    if(!byDate[e.date])byDate[e.date]=[];
+    byDate[e.date].push(e);
+  });
+  return Object.entries(byDate).filter(([,evs])=>evs.length>1).map(([date,evs])=>({date,evs}));
+}
+
+// ═══════════════ NAV ═══════════════
+let currentScreen='home';
+function nav(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('ntab-'+id).classList.add('active');
+  currentScreen=id;
+  if(id==='calendar'){renderClubFilters();renderCalendar();}
+  else ({home:renderHome,manage:renderManage,clubs:renderClubs})[id]();
+}
+
+// ═══════════════ HOME ═══════════════
+function renderHome(){
+  const clubs=getClubs();
+  const clubSel=document.getElementById('home-club');
+  const cv=clubSel.value;
+  clubSel.innerHTML='<option value="">すべての部</option>'+clubs.map(c=>`<option value="${c.id}"${c.id===cv?' selected':''}>${esc(c.name)}</option>`).join('');
+
+  const kw=(document.getElementById('home-kw').value||'').toLowerCase();
+  const cf=clubSel.value;
+  const today=new Date(new Date().toDateString());
+
+  const evs=getEvents()
+    .filter(e=>new Date(e.date+'T00:00:00')>=today)
+    .filter(e=>!cf||e.clubId===cf)
+    .filter(e=>{
+      if(!kw)return true;
+      const club=getClub(e.clubId);
+      return (e.title+e.venue+e.desc+club.name).toLowerCase().includes(kw);
+    })
+    .sort((a,b)=>a.date.localeCompare(b.date));
+
+  const grid=document.getElementById('home-grid');
+  if(!evs.length){
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1"><i class="ti ti-calendar-off"></i><p>表示できるイベントがありません</p></div>';
+    return;
+  }
+  grid.innerHTML=evs.map(ev=>{
+    const club=getClub(ev.clubId);
+    const cnt=countRegs(ev.id);
+    const ratio=ev.capacity?cnt/ev.capacity:-1;
+    const isFull=ratio>=1;
+    return`<div class="ev-showcase" onclick="openDetail('${ev.id}')">
+      <div class="ev-showcase-hero" style="background:${club.color}">
+        <div class="ev-showcase-club">${esc(club.name)}</div>
+        <div class="ev-showcase-title">${esc(ev.title)}</div>
+      </div>
+      <div class="ev-showcase-body">
+        <div class="ev-meta-row">
+          <span class="ev-meta-item"><i class="ti ti-calendar"></i>${fmtDateShort(ev.date)}</span>
+          ${ev.startTime?`<span class="ev-meta-item"><i class="ti ti-clock"></i>${ev.startTime}〜${ev.endTime||''}</span>`:''}
+        </div>
+        ${ev.venue?`<div class="ev-meta-row"><span class="ev-meta-item"><i class="ti ti-map-pin"></i>${esc(ev.venue)}</span></div>`:''}
+        ${ev.desc?`<p style="font-size:12px;color:#6b7280;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${esc(ev.desc)}</p>`:''}
+      </div>
+      <div class="ev-showcase-footer">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <i class="ti ti-users" style="font-size:13px;color:#9ca3af"></i>
+            <span style="font-size:12px;font-weight:700;color:#374151">${cnt}名${ev.capacity?' / '+ev.capacity+'名':''}</span>
+          </div>
+          ${ev.capacity?`<div class="cap-bar"><div class="cap-fill ${capCls(ratio)}" style="width:${Math.min(ratio*100,100)}%"></div></div>`:''}
+        </div>
+        <button class="btn ${isFull?'btn-ghost':'btn-green'} btn-sm" onclick="event.stopPropagation();${isFull?'':'openJoin(\''+ev.id+'\')'}" ${isFull?'disabled':''}>
+          ${isFull?'<i class="ti ti-users"></i>満員':'<i class="ti ti-user-plus"></i>参加する'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════ CALENDAR ═══════════════
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+let activeClubs=new Set(); // empty = all visible
+
+function renderClubFilters(){
+  const clubs=getClubs();
+  // init: all on
+  if(activeClubs.size===0)clubs.forEach(c=>activeClubs.add(c.id));
+  const allOn=clubs.every(c=>activeClubs.has(c.id));
+  const area=document.getElementById('cal-club-filters');
+  if(!area)return;
+  area.innerHTML=`<button class="ccf-btn all ${allOn?'on':''}" onclick="toggleAllClubs()"
+    style="background:#374151;border-color:#374151">
+    <i class="ti ti-layout-grid" style="font-size:13px"></i>すべて
+  </button>`
+  +clubs.map(c=>`<button class="ccf-btn ${activeClubs.has(c.id)?'on':''}"
+    style="background:${c.color};border-color:${c.color}"
+    onclick="toggleClub('${c.id}')">
+    ${esc(c.name)}
+  </button>`).join('');
+}
+
+function toggleAllClubs(){
+  const clubs=getClubs();
+  const allOn=clubs.every(c=>activeClubs.has(c.id));
+  if(allOn){activeClubs.clear();}
+  else{clubs.forEach(c=>activeClubs.add(c.id));}
+  renderClubFilters();renderCalendar();
+}
+function toggleClub(id){
+  if(activeClubs.has(id))activeClubs.delete(id);
+  else activeClubs.add(id);
+  renderClubFilters();renderCalendar();
+}
+
+function calMove(d){
+  calMonth+=d;
+  if(calMonth<0){calMonth=11;calYear--;}
+  if(calMonth>11){calMonth=0;calYear++;}
+  renderCalendar();
+}
+function calToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCalendar();}
+
+function renderCalendar(){
+  renderClubFilters();
+  document.getElementById('cal-month-label').textContent=`${calYear}年${calMonth+1}月`;
+
+  const conflicts=detectConflicts();
+  const conflictDates=new Set(conflicts.map(c=>c.date));
+
+  const area=document.getElementById('cal-grid');
+  const firstDay=new Date(calYear,calMonth,1);
+  const lastDay=new Date(calYear,calMonth+1,0);
+  const startDow=firstDay.getDay();
+  const today=new Date();
+  const todayStr=today.toISOString().split('T')[0];
+
+  const evsByDate={};
+  getEvents().forEach(e=>{
+    if(!evsByDate[e.date])evsByDate[e.date]=[];
+    evsByDate[e.date].push(e);
+  });
+
+  let html='';
+  let cellDate=new Date(calYear,calMonth,1-startDow);
+
+  for(let row=0;row<6;row++){
+    for(let col=0;col<7;col++){
+      const y=cellDate.getFullYear(),m=cellDate.getMonth(),d=cellDate.getDate();
+      const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isCurrentMonth=m===calMonth;
+      const isToday=dateStr===todayStr;
+      const dow=col; // 0=sun,6=sat
+      const hasConflict=conflictDates.has(dateStr);
+      const dayEvs=evsByDate[dateStr]||[];
+      const isPast=new Date(dateStr+'T00:00:00')<new Date(todayStr+'T00:00:00');
+
+      let cls='cal-cell';
+      if(!isCurrentMonth)cls+=' other-month';
+      if(isToday)cls+=' today';
+      if(dow===0)cls+=' sun';
+      if(dow===6)cls+=' sat';
+      if(hasConflict&&isCurrentMonth)cls+=' has-conflict';
+
+      // apply club filter
+      const visibleEvs=dayEvs.filter(e=>activeClubs.has(e.clubId));
+      const maxShow=3;
+      const pillsHtml=visibleEvs.slice(0,maxShow).map(ev=>{
+        const club=getClub(ev.clubId);
+        return`<span class="ev-pill" style="background:${club.color}" onclick="event.stopPropagation();openDetail('${ev.id}')" title="${esc(ev.title)}">${esc(ev.title)}</span>`;
+      }).join('');
+      const moreHtml=visibleEvs.length>maxShow?`<span class="ev-more">+${visibleEvs.length-maxShow}件</span>`:'';
+      const conflictDot=hasConflict&&isCurrentMonth?'<div class="conflict-dot"></div>':'';
+      const clickAttr=isCurrentMonth?`onclick="openDayPanel('${dateStr}')"`:'';
+
+      html+=`<div class="${cls}" ${clickAttr}>
+        ${conflictDot}
+        <div class="cal-day-num">${d}</div>
+        ${pillsHtml}${moreHtml}
+      </div>`;
+      cellDate.setDate(cellDate.getDate()+1);
+    }
+    if(cellDate.getMonth()!==calMonth&&cellDate.getDate()>7)break;
+  }
+  area.innerHTML=html;
+
+  // Conflict alert
+  const calAlert=document.getElementById('cal-conflict-alert');
+  if(conflicts.length&&conflicts.some(c=>c.date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`))){
+    const thisMonth=conflicts.filter(c=>c.date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`));
+    calAlert.innerHTML=`<div class="alert alert-warn" style="margin-bottom:12px"><i class="ti ti-alert-triangle"></i><div><strong>日程重複：</strong>${thisMonth.map(c=>fmtDateShort(c.date)+'に'+c.evs.length+'件重複').join('、')}</div></div>`;
+  }else{calAlert.innerHTML='';}
+}
+
+// ═══════════════ DAY PANEL (Calendar day click) ═══════════════
+function openDayPanel(dateStr){
+  const dt=new Date(dateStr+'T00:00:00');
+  document.getElementById('day-modal-title').textContent=
+    dt.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+
+  const dayEvs=getEvents().filter(e=>e.date===dateStr).sort((a,b)=>a.startTime.localeCompare(b.startTime));
+  const content=document.getElementById('day-modal-content');
+
+  if(!dayEvs.length){
+    content.innerHTML='<div class="empty" style="padding:32px"><i class="ti ti-calendar-off"></i><p>この日のイベントはありません</p></div>';
+  }else{
+    content.innerHTML=dayEvs.map(ev=>{
+      const club=getClub(ev.clubId);
+      const cnt=countRegs(ev.id);
+      const ratio=ev.capacity?cnt/ev.capacity:-1;
+      const isFull=ratio>=1;
+      return`<div style="border-left:4px solid ${club.color};background:#f8f9ff;border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+          <div>
+            <span class="badge" style="background:${club.color}18;color:${club.color};margin-bottom:4px">${esc(club.name)}</span>
+            <div style="font-size:15px;font-weight:800">${esc(ev.title)}</div>
+          </div>
+          <button class="btn btn-green btn-sm" onclick="closeModal('modal-day');openDetail('${ev.id}')" style="flex-shrink:0">
+            <i class="ti ti-info-circle"></i>詳細
+          </button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#6b7280;margin-bottom:6px">
+          ${ev.startTime?`<span style="display:flex;align-items:center;gap:4px"><i class="ti ti-clock" style="font-size:13px"></i>${ev.startTime}〜${ev.endTime||''}</span>`:''}
+          ${ev.venue?`<span style="display:flex;align-items:center;gap:4px"><i class="ti ti-map-pin" style="font-size:13px"></i>${esc(ev.venue)}</span>`:''}
+          <span style="display:flex;align-items:center;gap:4px"><i class="ti ti-users" style="font-size:13px"></i>${cnt}名${ev.capacity?' / '+ev.capacity+'名':''}</span>
+        </div>
+        ${ev.capacity?`<div class="cap-bar"><div class="cap-fill ${capCls(ratio)}" style="width:${Math.min(ratio*100,100)}%"></div></div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:3px">${isFull?'満員':'残り '+(ev.capacity-cnt)+' 名'}</div>`:''}
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('modal-day').classList.add('open');
+}
+
+// ═══════════════ DETAIL MODAL ═══════════════
+let detailId=null;
+function openDetail(id){
+  detailId=id;
+  renderDetail();
+  document.getElementById('modal-detail').classList.add('open');
+}
+function renderDetail(){
+  const ev=getEvents().find(e=>e.id===detailId);if(!ev)return;
+  const club=getClub(ev.clubId);
+  const allRegs=getRegs().filter(r=>r.eventId===ev.id);
+  const activeRegs=allRegs.filter(r=>!r.cancelled);
+  const cnt=activeRegs.length;
+  const ratio=ev.capacity?cnt/ev.capacity:-1;
+  const isFull=ratio>=1;
+
+  const regList=allRegs.length?allRegs.map((r,i)=>`
+    <div class="reg-item ${r.cancelled?'reg-cancelled':''}">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <span class="reg-num" style="background:${club.color}20;color:${club.color}">${i+1}</span>
+        <div><div class="reg-name">${esc(r.name)}</div><div class="reg-info">${[r.email,r.phone].filter(Boolean).map(esc).join(' / ')}</div></div>
+      </div>
+      ${r.cancelled?'<span class="badge" style="background:#f3f4f6;color:#6b7280">キャンセル済</span>':''}
+    </div>`).join('')
+    :'<p style="color:#9ca3af;font-size:13px;padding:8px 0">まだ参加者はいません</p>';
+
+  document.getElementById('modal-detail-content').innerHTML=`
+    <div class="detail-hero" style="background:${club.color};border-radius:14px 14px 0 0">
+      <div style="margin-bottom:8px"><span class="badge" style="background:rgba(255,255,255,.2);color:#fff">${esc(club.name)}</span></div>
+      <h2>${esc(ev.title)}</h2>
+      <div class="dh-meta">
+        <span><i class="ti ti-calendar"></i>${fmtDate(ev.date)}</span>
+        ${ev.startTime?`<span><i class="ti ti-clock"></i>${ev.startTime}〜${ev.endTime||''}</span>`:''}
+        ${ev.venue?`<span><i class="ti ti-map-pin"></i>${esc(ev.venue)}</span>`:''}
+      </div>
+    </div>
+    <div class="detail-body">
+      ${ev.desc?`<div style="margin-bottom:16px"><div class="dl">概要</div><p style="font-size:14px;line-height:1.75;color:#374151">${esc(ev.desc).replace(/\n/g,'<br>')}</p></div>`:''}
+      <div style="margin-bottom:16px">
+        <div class="dl">参加状況</div>
+        <div style="font-size:24px;font-weight:800;color:${club.color}">${cnt}名${ev.capacity?`<span style="font-size:14px;font-weight:400;color:#9ca3af"> / ${ev.capacity}名</span>`:''}</div>
+        ${ev.capacity?`<div class="cap-bar" style="margin-top:8px"><div class="cap-fill ${capCls(ratio)}" style="width:${Math.min(ratio*100,100)}%"></div></div>
+        <div class="cap-label" style="margin-top:4px">${isFull?'定員に達しています':'残り '+(ev.capacity-cnt)+' 名'}</div>`:''}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-green btn-sm" onclick="openJoin('${ev.id}')" ${isFull?'disabled':''}>
+          <i class="ti ti-user-plus"></i>参加登録
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="openCancelModal('${ev.id}')">
+          <i class="ti ti-user-minus"></i>キャンセル
+        </button>
+      </div>
+      <div class="sep"></div>
+      <div class="dl">参加者一覧（${cnt}名）</div>
+      <div>${regList}</div>
+    </div>`;
+}
+
+// ═══════════════ JOIN ═══════════════
+let joinId=null;
+function openJoin(id){
+  joinId=id;
+  const ev=getEvents().find(e=>e.id===id);
+  document.getElementById('join-ev-name').textContent=ev?ev.title:'';
+  ['join-name','join-email','join-phone'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('join-alert').innerHTML='';
+  document.getElementById('modal-join').classList.add('open');
+}
+function submitJoin(){
+  const name=document.getElementById('join-name').value.trim();
+  if(!name){showAlert('join-alert','お名前を入力してください','danger');return;}
+  const ev=getEvents().find(e=>e.id===joinId);if(!ev)return;
+  const cnt=countRegs(joinId);
+  if(ev.capacity&&cnt>=ev.capacity){showAlert('join-alert','定員に達しているため登録できません','danger');return;}
+  const regs=getRegs();
+  if(regs.find(r=>r.eventId===joinId&&r.name===name&&!r.cancelled)){showAlert('join-alert','同じお名前で既に登録されています','warn');return;}
+  regs.push({id:uid(),eventId:joinId,name,email:document.getElementById('join-email').value.trim(),phone:document.getElementById('join-phone').value.trim(),registeredAt:new Date().toISOString(),cancelled:false});
+  saveRegs(regs);
+  closeModal('modal-join');
+  if(detailId)renderDetail();
+  refresh();
+  showToast('参加登録が完了しました！');
+}
+
+// ═══════════════ CANCEL ═══════════════
+let cancelId=null;
+function openCancelModal(id){
+  cancelId=id;
+  document.getElementById('cancel-name').value='';
+  document.getElementById('cancel-alert').innerHTML='';
+  document.getElementById('modal-cancel').classList.add('open');
+}
+function submitCancel(){
+  const name=document.getElementById('cancel-name').value.trim();
+  if(!name){showAlert('cancel-alert','お名前を入力してください','danger');return;}
+  const regs=getRegs();
+  const r=regs.find(r=>r.eventId===cancelId&&r.name===name&&!r.cancelled);
+  if(!r){showAlert('cancel-alert','登録が見つかりませんでした。お名前をご確認ください','danger');return;}
+  r.cancelled=true;
+  saveRegs(regs);
+  closeModal('modal-cancel');
+  if(detailId)renderDetail();
+  refresh();
+  showToast('キャンセルしました');
+}
+
+// ═══════════════ MANAGE ═══════════════
+function renderManage(){
+  const clubs=getClubs();
+  ['adm-club-f','ev-club'].forEach(id=>{
+    const s=document.getElementById(id);const v=s.value;
+    s.innerHTML='<option value="">すべての部</option>'+clubs.map(c=>`<option value="${c.id}"${c.id===v?' selected':''}>${esc(c.name)}</option>`).join('');
+  });
+  const evs=getEvents();
+  const regs=getRegs().filter(r=>!r.cancelled);
+  const conflicts=detectConflicts();
+  document.getElementById('adm-stats').innerHTML=`
+    <div class="stat"><div class="stat-n">${evs.length}</div><div class="stat-l">登録イベント数</div></div>
+    <div class="stat"><div class="stat-n">${clubs.length}</div><div class="stat-l">登録部数</div></div>
+    <div class="stat"><div class="stat-n">${regs.length}</div><div class="stat-l">参加登録数</div></div>
+    <div class="stat"><div class="stat-n" style="color:${conflicts.length?'#dc2626':'#059669'}">${conflicts.length}</div><div class="stat-l">日程重複</div></div>`;
+
+  let cHtml='';
+  if(conflicts.length){
+    cHtml=`<div class="alert alert-danger" style="margin-bottom:14px"><i class="ti ti-alert-triangle"></i><div><strong>日程重複があります：</strong><br>${conflicts.map(c=>`${fmtDateShort(c.date)}：${c.evs.map(e=>esc(e.title)).join('・')}`).join('<br>')}</div></div>`;
+  }
+  document.getElementById('adm-conflict-area').innerHTML=cHtml;
+  renderAdmList();
+}
+
+function admTab(tab){
+  document.getElementById('adm-list-panel').style.display=tab==='list'?'block':'none';
+  document.getElementById('adm-add-panel').style.display=tab==='add'?'block':'none';
+  document.getElementById('atab-list').className='itab'+(tab==='list'?' active':'');
+  document.getElementById('atab-add').className='itab'+(tab==='add'?' active':'');
+}
+
+function renderAdmList(){
+  const kw=(document.getElementById('adm-kw').value||'').toLowerCase();
+  const cf=document.getElementById('adm-club-f').value;
+  const evs=getEvents()
+    .filter(e=>!cf||e.clubId===cf)
+    .filter(e=>!kw||(e.title+e.venue).toLowerCase().includes(kw))
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  const area=document.getElementById('adm-list');
+  if(!evs.length){area.innerHTML='<div class="empty" style="padding:32px"><i class="ti ti-calendar-off"></i><p>イベントがありません</p></div>';return;}
+  area.innerHTML=evs.map(ev=>{
+    const club=getClub(ev.clubId);
+    const cnt=countRegs(ev.id);
+    return`<div class="adm-item" style="border-left-color:${club.color}" onclick="openDetail('${ev.id}')">
+      <div style="width:12px;height:12px;border-radius:50%;background:${club.color};flex-shrink:0"></div>
+      <div class="adm-item-info">
+        <div class="adm-title">${esc(ev.title)}</div>
+        <div class="adm-meta">${fmtDateShort(ev.date)} ${ev.startTime?ev.startTime+'〜':''} ${ev.venue?'/ '+esc(ev.venue):''} / 参加${cnt}名${ev.capacity?'/'+ev.capacity+'名':''} <span class="badge b-club" style="background:${club.color}15;color:${club.color}">${esc(club.name)}</span></div>
+      </div>
+      <div class="adm-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-xs" onclick="openEdit('${ev.id}')"><i class="ti ti-edit"></i>編集</button>
+        <button class="btn btn-xs" style="background:#fee2e2;color:#991b1b;border:none;border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px" onclick="openDel('${ev.id}')"><i class="ti ti-trash"></i>削除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function checkConflict(){
+  const date=document.getElementById('ev-date').value;
+  const el=document.getElementById('add-conflict-alert');el.innerHTML='';
+  if(!date)return;
+  const same=getEvents().filter(e=>e.date===date);
+  if(!same.length)return;
+  el.innerHTML=`<div class="alert alert-warn"><i class="ti ti-alert-triangle"></i><div><strong>同日に${same.length}件のイベントがあります：</strong><br>${same.map(e=>`・${esc(getClub(e.clubId).name)}「${esc(e.title)}」`).join('<br>')}</div></div>`;
+}
+
+function clearAddForm(){
+  ['ev-title','ev-date','ev-venue','ev-cap','ev-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ev-club').value='';
+  document.getElementById('ev-start').value='10:00';
+  document.getElementById('ev-end').value='12:00';
+  document.getElementById('add-conflict-alert').innerHTML='';
+}
+
+function saveEvent(){
+  const clubId=document.getElementById('ev-club').value;
+  const title=document.getElementById('ev-title').value.trim();
+  const date=document.getElementById('ev-date').value;
+  if(!clubId){showAlert('add-conflict-alert','部を選択してください','danger');return;}
+  if(!title){showAlert('add-conflict-alert','イベント名を入力してください','danger');return;}
+  if(!date){showAlert('add-conflict-alert','開催日を入力してください','danger');return;}
+  const evs=getEvents();
+  evs.push({id:uid(),clubId,title,date,startTime:document.getElementById('ev-start').value,endTime:document.getElementById('ev-end').value,venue:document.getElementById('ev-venue').value.trim(),capacity:parseInt(document.getElementById('ev-cap').value)||0,desc:document.getElementById('ev-desc').value.trim(),status:'open',createdAt:new Date().toISOString()});
+  saveEvents(evs);
+  clearAddForm();
+  showToast('イベントを登録しました！');
+  admTab('list');renderManage();
+}
+
+// ═══════════════ EDIT ═══════════════
+function openEdit(id){
+  const ev=getEvents().find(e=>e.id===id);if(!ev)return;
+  document.getElementById('edit-id').value=id;
+  document.getElementById('edit-title').value=ev.title;
+  document.getElementById('edit-date').value=ev.date;
+  document.getElementById('edit-venue').value=ev.venue||'';
+  document.getElementById('edit-start').value=ev.startTime||'';
+  document.getElementById('edit-end').value=ev.endTime||'';
+  document.getElementById('edit-cap').value=ev.capacity||'';
+  document.getElementById('edit-desc').value=ev.desc||'';
+  document.getElementById('modal-edit').classList.add('open');
+}
+function updateEvent(){
+  const id=document.getElementById('edit-id').value;
+  const title=document.getElementById('edit-title').value.trim();
+  const date=document.getElementById('edit-date').value;
+  if(!title||!date){showToast('必須項目を入力してください','warn');return;}
+  const evs=getEvents();const idx=evs.findIndex(e=>e.id===id);if(idx<0)return;
+  evs[idx]={...evs[idx],title,date,venue:document.getElementById('edit-venue').value.trim(),startTime:document.getElementById('edit-start').value,endTime:document.getElementById('edit-end').value,capacity:parseInt(document.getElementById('edit-cap').value)||0,desc:document.getElementById('edit-desc').value.trim()};
+  saveEvents(evs);closeModal('modal-edit');renderManage();showToast('更新しました');
+}
+
+// ═══════════════ DELETE ═══════════════
+function openDel(id){
+  const ev=getEvents().find(e=>e.id===id);if(!ev)return;
+  document.getElementById('del-id').value=id;
+  document.getElementById('del-ev-name').textContent=ev.title;
+  document.getElementById('modal-del').classList.add('open');
+}
+function deleteEvent(){
+  const id=document.getElementById('del-id').value;
+  saveEvents(getEvents().filter(e=>e.id!==id));
+  saveRegs(getRegs().filter(r=>r.eventId!==id));
+  closeModal('modal-del');renderManage();showToast('削除しました');
+}
+
+// ═══════════════ CLUBS ═══════════════
+function renderClubs(){
+  const cs=COLORS;
+  document.getElementById('color-opts').innerHTML=cs.map(c=>`<div class="co ${document.getElementById('club-color').value===c?'sel':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`).join('');
+  const clubs=getClubs();const evs=getEvents();
+  const area=document.getElementById('club-list');
+  if(!clubs.length){area.innerHTML='<div class="empty" style="padding:24px"><i class="ti ti-users-off"></i><p>まだ部が登録されていません</p></div>';return;}
+  area.innerHTML=clubs.map(c=>{
+    const cnt=evs.filter(e=>e.clubId===c.id).length;
+    return`<div class="club-item">
+      <div class="club-dot" style="background:${c.color}"></div>
+      <span class="club-name">${esc(c.name)}</span>
+      ${c.note?`<span style="font-size:12px;color:#9ca3af">${esc(c.note)}</span>`:''}
+      <span style="font-size:12px;color:#9ca3af">イベント${cnt}件</span>
+      <button class="btn btn-xs btn-ghost" onclick="delClub('${c.id}')"><i class="ti ti-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function selectColor(c){document.getElementById('club-color').value=c;renderClubs();}
+function addClub(){
+  const name=document.getElementById('club-name').value.trim();
+  if(!name){showToast('部の名前を入力してください','warn');return;}
+  const clubs=getClubs();
+  if(clubs.find(c=>c.name===name)){showToast('同じ名前の部がすでに存在します','warn');return;}
+  clubs.push({id:uid(),name,color:document.getElementById('club-color').value,note:document.getElementById('club-note').value.trim(),createdAt:new Date().toISOString()});
+  saveClubs(clubs);
+  document.getElementById('club-name').value='';document.getElementById('club-note').value='';
+  renderClubs();showToast('部を登録しました！');
+}
+function delClub(id){
+  const cnt=getEvents().filter(e=>e.clubId===id).length;
+  if(cnt&&!confirm(`この部には${cnt}件のイベントがあります。削除してよいですか？`))return;
+  saveClubs(getClubs().filter(c=>c.id!==id));
+  saveEvents(getEvents().filter(e=>e.clubId!==id));
+  renderClubs();
+}
+
+// ═══════════════ UTILS ═══════════════
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+function showAlert(cid,msg,type){
+  const map={danger:['alert-danger','ti-circle-x'],warn:['alert-warn','ti-alert-triangle'],success:['alert-success','ti-circle-check'],info:['alert-info','ti-info-circle']};
+  const[cls,icon]=map[type]||map.info;
+  document.getElementById(cid).innerHTML=`<div class="alert ${cls}"><i class="ti ${icon}"></i><span>${esc(msg)}</span></div>`;
+}
+
+function showToast(msg,type='success'){
+  const t=document.createElement('div');
+  const bg=type==='success'?'#059669':type==='warn'?'#d97706':'#dc2626';
+  t.style.cssText=`position:fixed;bottom:24px;right:24px;background:${bg};color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;display:flex;align-items:center;gap:8px;max-width:280px;box-shadow:0 4px 20px rgba(0,0,0,.15)`;
+  t.innerHTML=`<i class="ti ti-${type==='success'?'check':'alert-triangle'}" style="font-size:16px"></i>${esc(msg)}`;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .35s';t.style.opacity='0';setTimeout(()=>t.remove(),350);},2400);
+}
+
+function refresh(){
+  if(currentScreen==='home')renderHome();
+  if(currentScreen==='calendar')renderCalendar();
+  if(currentScreen==='manage')renderManage();
+}
+
+// ═══════════════ BOOT ═══════════════
+renderHome();
+renderCalendar();
+renderManage();
+renderClubs();
+</script>
+</body>
+</html>
