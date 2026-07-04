@@ -667,8 +667,8 @@ function renderCalendar(){
       if(dow===6)cls+=' sat';
       if(hasConflict&&isCurrentMonth)cls+=' has-conflict';
 
-      // apply club filter
-      const visibleEvs=dayEvs.filter(e=>activeClubs.has(e.clubId));
+      // apply club filter (empty set = show all)
+      const visibleEvs=activeClubs.size===0?dayEvs:dayEvs.filter(e=>activeClubs.has(e.clubId));
       const maxShow=3;
       const pillsHtml=visibleEvs.slice(0,maxShow).map(ev=>{
         const club=getClub(ev.clubId);
