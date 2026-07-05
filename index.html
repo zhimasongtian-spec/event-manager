@@ -391,6 +391,7 @@ body{font-family:'Hiragino Sans','Yu Gothic UI','Noto Sans JP',sans-serif;backgr
     <div id="join-ev-name" style="font-size:13px;color:#6b7280;margin:-10px 0 16px"></div>
     <div id="join-alert"></div>
     <div class="fg"><label class="req">お名前</label><input type="text" id="join-name" placeholder="例：山田 太郎"></div>
+    <p style="font-size:11px;color:var(--t2);margin:-6px 0 10px;padding:8px 12px;background:var(--accent-bg);border-radius:8px"><i class="ti ti-info-circle" style="margin-right:4px"></i>緊急連絡のため、メールアドレスまたは電話番号のどちらか一方は必須です。</p>
     <div class="fg"><label>メールアドレス</label><input type="email" id="join-email" placeholder="例：taro@example.com"></div>
     <div class="fg"><label>電話番号</label><input type="tel" id="join-phone" placeholder="例：090-1234-5678"></div>
     <div class="modal-actions">
@@ -453,29 +454,14 @@ body{font-family:'Hiragino Sans','Yu Gothic UI','Noto Sans JP',sans-serif;backgr
 
 <!-- ═══ LOGIN MODAL ═══ -->
 <div class="overlay" id="modal-login">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width:360px">
     <div class="modal-title"><i class="ti ti-lock" aria-hidden="true"></i>ログイン</div>
-    <div class="itabs">
-      <div class="itab active" onclick="loginTab('admin')" id="ltab-admin"><i class="ti ti-crown" style="font-size:14px"></i> 管理者</div>
-      <div class="itab" onclick="loginTab('member')" id="ltab-member"><i class="ti ti-run" style="font-size:14px"></i> 部員</div>
-    </div>
-    <div id="login-admin-panel">
-      <div class="fg"><label class="req">管理者パスワード</label><input type="password" id="login-admin-pass" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')submitAdminLogin()"></div>
-      <div id="login-alert"></div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeModal('modal-login')"><i class="ti ti-x"></i>閉じる</button>
-        <button class="btn btn-primary" onclick="submitAdminLogin()"><i class="ti ti-login"></i>ログイン</button>
-      </div>
-    </div>
-    <div id="login-member-panel" style="display:none">
-      <div class="fg"><label class="req">所属する部</label><select id="login-club-sel" onchange="updateMemberList()"><option value="">-- 部を選択 --</option></select></div>
-      <div class="fg"><label class="req">お名前</label><select id="login-member-sel"><option value="">-- 名前を選択 --</option></select></div>
-      <div class="fg"><label class="req">パスワード</label><input type="password" id="login-member-pass" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')submitMemberLogin()"></div>
-      <div id="login-member-alert"></div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeModal('modal-login')"><i class="ti ti-x"></i>閉じる</button>
-        <button class="btn btn-primary" onclick="submitMemberLogin()"><i class="ti ti-login"></i>ログイン</button>
-      </div>
+    <p style="font-size:13px;color:var(--t2);margin:-10px 0 18px">パスワードを入力してください。管理者・ホストを自動で判別します。</p>
+    <div class="fg"><label class="req">パスワード</label><input type="password" id="login-pass" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')submitLogin()"></div>
+    <div id="login-alert"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-login')"><i class="ti ti-x"></i>閉じる</button>
+      <button class="btn btn-primary" onclick="submitLogin()"><i class="ti ti-login"></i>ログイン</button>
     </div>
   </div>
 </div>
@@ -558,7 +544,7 @@ function updateAuthUI(){
     const club=currentUser.role==='member'?getClub(currentUser.clubId):null;
     userDiv.innerHTML=currentUser.role==='admin'
       ?`<span class="nav-user-badge">👑 <strong>管理者</strong></span><button class="btn-nav-logout" onclick="logout()">ログアウト</button>`
-      :`<span class="nav-user-badge">🏃 <strong>${esc(currentUser.name)}</strong>（${esc(club.name)}）</span><button class="btn-nav-logout" onclick="logout()">ログアウト</button>`;
+      :`<span class="nav-user-badge">🎯 ホスト：<strong>${esc(currentUser.name)}</strong>（${esc(club.name)}）</span><button class="btn-nav-logout" onclick="logout()">ログアウト</button>`;
     userDiv.style.display='flex';
   }else{
     loginBtn.style.display='flex';
@@ -576,52 +562,32 @@ function updateTabVisibility(){
 }
 
 function openLoginModal(){
-  document.getElementById('login-admin-pass').value='';
+  document.getElementById('login-pass').value='';
   document.getElementById('login-alert').innerHTML='';
-  document.getElementById('login-member-pass').value='';
-  document.getElementById('login-member-alert').innerHTML='';
-  const clubs=getClubs();
-  document.getElementById('login-club-sel').innerHTML='<option value="">-- 部を選択 --</option>'+clubs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
-  document.getElementById('login-member-sel').innerHTML='<option value="">-- 名前を選択 --</option>';
-  loginTab('admin');
   document.getElementById('modal-login').classList.add('open');
 }
 
-let _loginMode='admin';
-function loginTab(mode){
-  _loginMode=mode;
-  document.getElementById('login-admin-panel').style.display=mode==='admin'?'block':'none';
-  document.getElementById('login-member-panel').style.display=mode==='member'?'block':'none';
-  document.getElementById('ltab-admin').className='itab'+(mode==='admin'?' active':'');
-  document.getElementById('ltab-member').className='itab'+(mode==='member'?' active':'');
-}
-
-function updateMemberList(){
-  const clubId=document.getElementById('login-club-sel').value;
-  const members=getMembers().filter(m=>m.clubId===clubId);
-  document.getElementById('login-member-sel').innerHTML='<option value="">-- 名前を選択 --</option>'+members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
-}
-
-function submitAdminLogin(){
-  const pass=document.getElementById('login-admin-pass').value;
+function submitLogin(){
+  const pass=document.getElementById('login-pass').value;
+  if(!pass){showAlert('login-alert','パスワードを入力してください','danger');return;}
+  // 管理者チェック
   if(pass===getAdminPass()){
     setCurrentUser({role:'admin'});
     closeModal('modal-login');
     showToast('管理者としてログインしました');
     renderClubs();renderManage();
-  }else{showAlert('login-alert','パスワードが違います','danger');}
-}
-
-function submitMemberLogin(){
-  const memberId=document.getElementById('login-member-sel').value;
-  const pass=document.getElementById('login-member-pass').value;
-  if(!memberId){showAlert('login-member-alert','名前を選択してください','danger');return;}
-  const member=getMembers().find(m=>m.id===memberId);
-  if(!member||member.password!==pass){showAlert('login-member-alert','パスワードが違います','danger');return;}
-  setCurrentUser({role:'member',id:member.id,name:member.name,clubId:member.clubId});
-  closeModal('modal-login');
-  showToast(`${member.name}さんとしてログインしました`);
-  renderManage();
+    return;
+  }
+  // ホストチェック
+  const host=getMembers().find(m=>m.password===pass);
+  if(host){
+    setCurrentUser({role:'member',id:host.id,name:host.name,clubId:host.clubId});
+    closeModal('modal-login');
+    showToast(`${host.name}さんとしてログインしました`);
+    renderManage();
+    return;
+  }
+  showAlert('login-alert','パスワードが違います','danger');
 }
 
 function logout(){
@@ -893,15 +859,18 @@ function renderDetail(){
   const ratio=ev.capacity?cnt/ev.capacity:-1;
   const isFull=ratio>=1;
 
-  const regList=allRegs.length?allRegs.map((r,i)=>`
-    <div class="reg-item ${r.cancelled?'reg-cancelled':''}">
-      <div style="display:flex;align-items:flex-start;gap:8px">
-        <span class="reg-num" style="background:${club.color}20;color:${club.color}">${i+1}</span>
-        <div><div class="reg-name">${esc(r.name)}</div><div class="reg-info">${[r.email,r.phone].filter(Boolean).map(esc).join(' / ')}</div></div>
-      </div>
-      ${r.cancelled?'<span class="badge" style="background:#f3f4f6;color:#6b7280">キャンセル済</span>':''}
-    </div>`).join('')
-    :'<p style="color:#9ca3af;font-size:13px;padding:8px 0">まだ参加者はいません</p>';
+  const canSeeRegs=currentUser?.role==='admin'||currentUser?.role==='member';
+  const regList=canSeeRegs
+    ?(allRegs.length?allRegs.map((r,i)=>`
+      <div class="reg-item ${r.cancelled?'reg-cancelled':''}">
+        <div style="display:flex;align-items:flex-start;gap:8px">
+          <span class="reg-num" style="background:${club.color}20;color:${club.color}">${i+1}</span>
+          <div><div class="reg-name">${esc(r.name)}</div><div class="reg-info">${[r.email,r.phone].filter(Boolean).map(esc).join(' / ')}</div></div>
+        </div>
+        ${r.cancelled?'<span class="badge" style="background:#f3f4f6;color:#6b7280">キャンセル済</span>':''}
+      </div>`).join('')
+      :'<p style="color:#9ca3af;font-size:13px;padding:8px 0">まだ参加者はいません</p>')
+    :`<div class="alert alert-info"><i class="ti ti-lock"></i><span>参加者の氏名・連絡先はホスト・管理者のみ閲覧できます。</span></div>`;
 
   document.getElementById('modal-detail-content').innerHTML=`
     <div class="detail-hero" style="background:${club.color};border-radius:14px 14px 0 0">
@@ -914,10 +883,10 @@ function renderDetail(){
       </div>
     </div>
     <div class="detail-body">
-      ${ev.desc?`<div style="margin-bottom:16px"><div class="dl">概要</div><p style="font-size:14px;line-height:1.75;color:#374151">${esc(ev.desc).replace(/\n/g,'<br>')}</p></div>`:''}
+      ${ev.desc?`<div style="margin-bottom:16px"><div class="dl">概要</div><p style="font-size:14px;line-height:1.75;color:var(--t1)">${esc(ev.desc).replace(/\n/g,'<br>')}</p></div>`:''}
       <div style="margin-bottom:16px">
         <div class="dl">参加状況</div>
-        <div style="font-size:24px;font-weight:800;color:${club.color}">${cnt}名${ev.capacity?`<span style="font-size:14px;font-weight:400;color:#9ca3af"> / ${ev.capacity}名</span>`:''}</div>
+        <div style="font-size:24px;font-weight:800;color:${club.color}">${cnt}名${ev.capacity?`<span style="font-size:14px;font-weight:400;color:var(--t3)"> / ${ev.capacity}名</span>`:''}</div>
         ${ev.capacity?`<div class="cap-bar" style="margin-top:8px"><div class="cap-fill ${capCls(ratio)}" style="width:${Math.min(ratio*100,100)}%"></div></div>
         <div class="cap-label" style="margin-top:4px">${isFull?'定員に達しています':'残り '+(ev.capacity-cnt)+' 名'}</div>`:''}
       </div>
@@ -947,7 +916,10 @@ function openJoin(id){
 }
 function submitJoin(){
   const name=document.getElementById('join-name').value.trim();
+  const email=document.getElementById('join-email').value.trim();
+  const phone=document.getElementById('join-phone').value.trim();
   if(!name){showAlert('join-alert','お名前を入力してください','danger');return;}
+  if(!email&&!phone){showAlert('join-alert','メールアドレスまたは電話番号を入力してください','danger');return;}
   const ev=getEvents().find(e=>e.id===joinId);if(!ev)return;
   const cnt=countRegs(joinId);
   if(ev.capacity&&cnt>=ev.capacity){showAlert('join-alert','定員に達しているため登録できません','danger');return;}
@@ -1179,25 +1151,24 @@ function delClub(id){
   renderClubs();
 }
 
-// ═══════════════ MEMBER MANAGEMENT ═══════════════
+// ═══════════════ HOST MANAGEMENT ═══════════════
 function renderMemberMgmt(){
   const clubs=getClubs();
-  const members=getMembers();
   const section=document.getElementById('member-mgmt-section');
   section.innerHTML=`<div class="card">
-    <div class="card-head"><i class="ti ti-id-badge"></i>部員の管理</div>
-    <div class="fg"><label class="req">部を選択</label>
+    <div class="card-head"><i class="ti ti-id-badge"></i>ホストの管理</div>
+    <div class="fg"><label class="req">所属する部</label>
       <select id="mm-club" onchange="renderMemberList()">
         <option value="">-- 部を選択 --</option>
         ${clubs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}
       </select>
     </div>
     <div class="row2">
-      <div class="fg"><label class="req">部員名</label><input type="text" id="mm-name" placeholder="例：山田 太郎"></div>
-      <div class="fg"><label class="req">パスワード</label><input type="password" id="mm-pass" placeholder="ログイン用パスワード"></div>
+      <div class="fg"><label class="req">ホスト名</label><input type="text" id="mm-name" placeholder="例：山田 太郎"></div>
+      <div class="fg"><label class="req">ログインパスワード</label><input type="password" id="mm-pass" placeholder="他と重複しない文字列"></div>
     </div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:18px">
-      <button class="btn btn-primary" onclick="addMember()"><i class="ti ti-user-plus"></i>部員を登録</button>
+      <button class="btn btn-primary" onclick="addMember()"><i class="ti ti-user-plus"></i>ホストを登録</button>
     </div>
     <div id="mm-list"></div>
   </div>`;
@@ -1208,8 +1179,8 @@ function renderMemberList(){
   const area=document.getElementById('mm-list');if(!area)return;
   if(!clubId){area.innerHTML='';return;}
   const members=getMembers().filter(m=>m.clubId===clubId);
-  if(!members.length){area.innerHTML='<p style="font-size:13px;color:var(--t3);padding:8px 0">まだ部員が登録されていません</p>';return;}
-  area.innerHTML=`<div class="dl" style="margin-bottom:10px">登録済みの部員（${members.length}名）</div>`+members.map(m=>`
+  if(!members.length){area.innerHTML='<p style="font-size:13px;color:var(--t3);padding:8px 0">まだホストが登録されていません</p>';return;}
+  area.innerHTML=`<div class="dl" style="margin-bottom:10px">登録済みのホスト（${members.length}名）</div>`+members.map(m=>`
     <div class="club-item" style="padding:10px 14px">
       <i class="ti ti-user" style="color:var(--accent);font-size:16px;flex-shrink:0"></i>
       <span class="club-name" style="font-size:13px">${esc(m.name)}</span>
@@ -1222,21 +1193,22 @@ function addMember(){
   const name=document.getElementById('mm-name').value.trim();
   const pass=document.getElementById('mm-pass').value;
   if(!clubId){showToast('部を選択してください','warn');return;}
-  if(!name){showToast('部員名を入力してください','warn');return;}
+  if(!name){showToast('ホスト名を入力してください','warn');return;}
   if(!pass){showToast('パスワードを入力してください','warn');return;}
   const members=getMembers();
-  if(members.find(m=>m.clubId===clubId&&m.name===name)){showToast('同じ名前の部員がすでに存在します','warn');return;}
+  if(members.find(m=>m.password===pass)){showToast('そのパスワードはすでに使われています','warn');return;}
+  if(members.find(m=>m.clubId===clubId&&m.name===name)){showToast('同じ名前のホストがすでに存在します','warn');return;}
   members.push({id:uid(),clubId,name,password:pass,createdAt:new Date().toISOString()});
   saveMembers(members);
   document.getElementById('mm-name').value='';document.getElementById('mm-pass').value='';
-  renderMemberList();showToast(`${name}さんを登録しました`);
+  renderMemberList();showToast(`${name}さんをホストに登録しました`);
   renderClubs();
 }
 
 function delMember(id){
-  if(!confirm('この部員を削除しますか？'))return;
+  if(!confirm('このホストを削除しますか？'))return;
   saveMembers(getMembers().filter(m=>m.id!==id));
-  renderMemberList();renderClubs();showToast('部員を削除しました');
+  renderMemberList();renderClubs();showToast('ホストを削除しました');
 }
 
 // ═══════════════ UTILS ═══════════════
